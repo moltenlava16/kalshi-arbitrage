@@ -9,7 +9,7 @@ cross-option arbitrage opportunities.
 import sys
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from enum import Enum
 
 
@@ -82,34 +82,86 @@ Return on Capital: {self.return_on_capital:.1%}
 
 
 class FeeCalculator:
-    """Calculates Kalshi trading fees"""
+    """Calculates Kalshi trading fees based on official fee schedule"""
     
-    def __init__(self, fee_tier: str = "retail"):
-        # Simplified fee structure - update with actual Kalshi fees
-        self.fee_rates = {
-            "retail": Decimal("0.01"),  # 1% on profit
-            "market_maker": Decimal("0.005"),  # 0.5% on profit
-        }
-        self.fee_rate = self.fee_rates.get(fee_tier, Decimal("0.01"))
+    # Maker fee series (as of June 18, 2025)
+    MAKER_FEE_SERIES = {
+        "KXAAAGASM", "KXGDP", "KXPAYROLLS", "KXU3", "KXEGGS", "KXCPI", "KXCPIYOY",
+        "KXFEDDECISION", "KXFED", "KXNBA", "KXNBAEAST", "KXNBAWEST", "KXNBASERIES",
+        "KXNBAGAME", "KXNHL", "KXNHLEAST", "KXNHLWEST", "KXNHLSERIES", "KXNHLGAME",
+        "KXINDY500", "KXPGA", "KXUSOPEN", "KXPGARYDER", "KXTHEOPEN", "KXPGASOLHEIM",
+        "KXFOMENSINGLES", "KXFOWOMENSINGLES", "KXWMENSINGLES", "KXWWOMENSINGLES",
+        "KXUSOMENSINGLES", "KXUSOWOMENSINGLES", "KXAOMENSINGLES", "KXAOWOMENSINGLES",
+        "KXNFLGAME", "KXUEFACL", "KXNBAFINALSMVP", "KXCONNSMYTHE", "KXFOMEN",
+        "KXFOWOMEN", "KXNATHANSHD", "KXNATHANDOGS", "KXCLUBWC", "KXTOURDEFRANCE",
+        "KXNASCARRACE"
+    }
     
-    def calculate_fees(self, trades: List[Tuple[str, Decimal, int]]) -> Decimal:
+    def __init__(self, market_type: str = "general"):
         """
-        Calculate fees for a set of trades
-        trades: List of (action, price, quantity) tuples
+        Initialize fee calculator
+        market_type: "general", "sp500", "nasdaq100", or series ticker
+        """
+        self.market_type = market_type
+        self.general_rate = Decimal("0.07")
+        self.sp500_nasdaq_rate = Decimal("0.035")
+        self.maker_fee_per_contract = Decimal("0.0025")
+    
+    def _round_up_to_cent(self, value: Decimal) -> Decimal:
+        """Round up to the next cent"""
+        cents = value * 100
+        return (cents.to_integral_value(rounding=ROUND_UP) / 100).quantize(
+            Decimal("0.01"), rounding=ROUND_UP
+        )
+    
+    def _get_series_from_ticker(self, ticker: str) -> str:
+        """Extract series from market ticker (e.g., 'KXFED-23DEC-T3.00' -> 'KXFED')"""
+        if "-" in ticker:
+            return ticker.split("-")[0]
+        return ticker
+    
+    def calculate_fees(self, trades: List[Tuple[str, Decimal, int, str, bool]]) -> Decimal:
+        """
+        Calculate fees for a set of trades based on Kalshi's fee schedule
+        trades: List of (action, price, quantity, ticker, is_maker) tuples
+        
+        Kalshi fee formula:
+        - General: fees = round up(0.07 × C × P × (1-P))
+        - S&P500/NASDAQ100: fees = round up(0.035 × C × P × (1-P))
+        - Maker fees: fees = round up(0.0025 × C)
+        
+        Where:
+        - C = number of contracts
+        - P = price in dollars
+        - Only taker orders are charged trading fees
         """
         total_fees = Decimal("0")
         
-        for action, price, quantity in trades:
-            if "sell" in action:
-                # Fee on expected profit for sells
-                expected_profit = price * quantity
-                total_fees += expected_profit * self.fee_rate
+        for action, price, quantity, ticker, is_maker in trades:
+            series = self._get_series_from_ticker(ticker)
+            
+            # Check if this is a maker fee market
+            if series in self.MAKER_FEE_SERIES and is_maker:
+                # Maker fee: flat fee per contract
+                fee = self._round_up_to_cent(self.maker_fee_per_contract * quantity)
+            elif not is_maker:  # Only charge trading fees for taker orders
+                # Determine fee rate based on market type
+                if ticker.startswith("INX") or ticker.startswith("NASDAQ100"):
+                    rate = self.sp500_nasdaq_rate
+                else:
+                    rate = self.general_rate
+                
+                # Calculate fee: rate × C × P × (1-P)
+                fee = self._round_up_to_cent(
+                    rate * quantity * price * (Decimal("1") - price)
+                )
             else:
-                # Fee on expected profit for buys (1 - price)
-                expected_profit = (Decimal("1") - price) * quantity
-                total_fees += expected_profit * self.fee_rate
+                # No fee for maker orders in non-maker-fee markets
+                fee = Decimal("0")
+            
+            total_fees += fee
         
-        return total_fees.quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+        return total_fees
 
 
 class ArbitrageCalculator:
@@ -136,9 +188,10 @@ class ArbitrageCalculator:
             gross_profit_per_contract = market_a.yes_bid - market_b.yes_ask
             if gross_profit_per_contract > 0:
                 size = min(max_size, 100)  # In production, check order book depth
+                # For arbitrage, we're taking liquidity (taker orders)
                 trades = [
-                    ("sell_yes", market_a.yes_bid, size),
-                    ("buy_yes", market_b.yes_ask, size)
+                    ("sell_yes", market_a.yes_bid, size, market_a.ticker, False),  # Taker
+                    ("buy_yes", market_b.yes_ask, size, market_b.ticker, False)    # Taker
                 ]
                 fees = self.fee_calculator.calculate_fees(trades)
                 net_profit = (gross_profit_per_contract * size) - fees
@@ -166,8 +219,8 @@ class ArbitrageCalculator:
             if gross_profit_per_contract > 0:
                 size = min(max_size, 100)
                 trades = [
-                    ("buy_no", market_b.no_ask, size),
-                    ("sell_no", market_a.no_bid, size)
+                    ("buy_no", market_b.no_ask, size, market_b.ticker, False),   # Taker
+                    ("sell_no", market_a.no_bid, size, market_a.ticker, False)   # Taker
                 ]
                 fees = self.fee_calculator.calculate_fees(trades)
                 net_profit = (gross_profit_per_contract * size) - fees
@@ -206,8 +259,8 @@ class ArbitrageCalculator:
             gross_profit = (market_a.yes_bid + market_b.yes_bid - Decimal("1"))
             size = min(max_size, 100)
             trades = [
-                ("sell_yes", market_a.yes_bid, size),
-                ("sell_yes", market_b.yes_bid, size)
+                ("sell_yes", market_a.yes_bid, size, market_a.ticker, False),  # Taker
+                ("sell_yes", market_b.yes_bid, size, market_b.ticker, False)   # Taker
             ]
             fees = self.fee_calculator.calculate_fees(trades)
             net_profit = (gross_profit * size) - fees
@@ -234,8 +287,8 @@ class ArbitrageCalculator:
             gross_profit = Decimal("1") - (market_a.no_ask + market_b.no_ask)
             size = min(max_size, 100)
             trades = [
-                ("buy_no", market_a.no_ask, size),
-                ("buy_no", market_b.no_ask, size)
+                ("buy_no", market_a.no_ask, size, market_a.ticker, False),   # Taker
+                ("buy_no", market_b.no_ask, size, market_b.ticker, False)    # Taker
             ]
             fees = self.fee_calculator.calculate_fees(trades)
             net_profit = (gross_profit * size) - fees
@@ -304,8 +357,8 @@ def main():
     print("\nThis tool identifies cross-option arbitrage opportunities.")
     print("You'll input prices for two related markets.\n")
     
-    # Initialize calculator
-    fee_calculator = FeeCalculator(fee_tier="retail")
+    # Initialize calculator with general market fees
+    fee_calculator = FeeCalculator(market_type="general")
     calculator = ArbitrageCalculator(fee_calculator)
     
     while True:
@@ -336,6 +389,13 @@ def main():
         market_b_ticker = input("Market B ticker: ").strip()
         market_b = input_market_data(market_b_name, market_b_ticker)
         
+        # Check if these are special fee markets
+        if (market_a_ticker.startswith("INX") or market_a_ticker.startswith("NASDAQ100") or
+            market_b_ticker.startswith("INX") or market_b_ticker.startswith("NASDAQ100")):
+            print("\n📊 Note: S&P500/NASDAQ-100 markets detected - using reduced fee rate (3.5%)")
+            fee_calculator = FeeCalculator(market_type="sp500")
+            calculator = ArbitrageCalculator(fee_calculator)
+        
         # Find arbitrage
         opportunity = None
         if choice == "1":
@@ -346,6 +406,12 @@ def main():
         # Display results
         if opportunity:
             print(opportunity)
+            
+            # Show fee breakdown
+            print("\n=== FEE BREAKDOWN ===")
+            print(f"Fee formula: 0.07 × contracts × price × (1-price)")
+            print(f"Total fees: ${opportunity.fees:.2f}")
+            print(f"Fee percentage of gross profit: {(opportunity.fees/opportunity.gross_profit*100):.1f}%")
             
             # Show outcome scenarios
             print("\n=== OUTCOME SCENARIOS ===")
@@ -360,6 +426,17 @@ def main():
         else:
             print("\n❌ No arbitrage opportunity found at current prices.")
             print("   (After accounting for fees and minimum profit threshold)")
+            
+            # Show what would be needed for arbitrage
+            if choice == "1":
+                min_spread = Decimal("0.03")  # Rough estimate
+                print(f"\n💡 For subset arbitrage, you typically need:")
+                print(f"   - Market A YES price > Market B YES price by ~${min_spread:.2f}+")
+                print(f"   - OR Market B NO price < Market A NO price by ~${min_spread:.2f}+")
+            else:
+                print(f"\n💡 For disjoint arbitrage, you typically need:")
+                print(f"   - Sum of YES prices > $1.02+")
+                print(f"   - OR Sum of NO prices < $0.98")
         
         input("\nPress Enter to continue...")
 
