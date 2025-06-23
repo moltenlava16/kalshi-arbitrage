@@ -56,6 +56,7 @@ kalshi-arbitrage/
 │   ├── settings.py              # Trading parameters and thresholds
 │   ├── credentials.example.py   # Template for API credentials
 │   └── markets.yaml            # Market relationship definitions
+│   └── kalshi_fees.py            # Centralized fee management    
 │
 ├── src/
 │   ├── __init__.py
