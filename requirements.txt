@@ -1,0 +1,37 @@
+# Core dependencies
+requests>=2.31.0
+websocket-client>=1.6.0
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# Data handling
+pandas>=2.1.0
+numpy>=1.24.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Order book management
+sortedcontainers>=2.4.0
+
+# Decimal math for precise calculations
+# (Decimal is built-in, no package needed)
+
+# Logging and monitoring
+loguru>=0.7.0
+rich>=13.5.0  # For better CLI output
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Development tools
+black>=23.7.0
+flake8>=6.1.0
+mypy>=1.5.0
+pre-commit>=3.3.0
+
+# Optional: Dashboard dependencies (Phase 5)
+# flask>=3.0.0
+# flask-socketio>=5.3.0
+# plotly>=5.16.0
