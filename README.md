@@ -144,7 +144,7 @@ Built-in safety features:
 - **Slippage protection** on order execution
 - **Circuit breakers** for unusual market conditions
 
-## 🛠 Development
+##  Development
 
 ### Setting up for development
 ```bash
