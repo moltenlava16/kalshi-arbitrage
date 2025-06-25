@@ -2,7 +2,7 @@
 
 An automated trading system that identifies and executes cross-option arbitrage opportunities on Kalshi's prediction markets using real-time WebSocket data feeds.
 
-## 🎯 Overview
+##  Overview
 
 This system exploits logical inconsistencies in related market options on Kalshi. For example, if "Above 400" is priced higher than "Above 300" in the same market, this creates a guaranteed profit opportunity since logically P(Above 400) ≤ P(Above 300).
 
@@ -13,7 +13,7 @@ This system exploits logical inconsistencies in related market options on Kalshi
 - **Live monitoring dashboard** for tracking opportunities and P&L
 - **Fee-aware calculations** ensuring profitability after transaction costs
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -62,7 +62,7 @@ python src/main.py --mode production
 python src/main.py --mode simulation
 ```
 
-## 📊 How It Works
+##  How It Works
 
 ### Arbitrage Example
 Consider a market "How Many Laws will Congress Pass in 2025?" with two options:
@@ -85,7 +85,7 @@ WebSocket Feed → Order Book Manager → Arbitrage Detector → Trade Executor
                                     Risk Manager → Position Tracker
 ```
 
-## 📁 Project Structure
+##  Project Structure
 
 For detailed project structure and development phases, see [PROJECT_OUTLINE.md](PROJECT_OUTLINE.md).
 
@@ -95,7 +95,7 @@ Key components:
 - `src/trading/` - Trade execution and position management
 - `src/monitoring/` - Dashboard and alerting
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Environment Variables
 Create a `.env` file in the project root:
@@ -113,7 +113,7 @@ Edit `config/settings.py` to customize:
 - Risk management rules
 - Market selection filters
 
-## 🧪 Testing
+##  Testing
 
 Run the test suite:
 ```bash
@@ -125,7 +125,7 @@ Run with coverage:
 pytest --cov=src tests/
 ```
 
-## 📈 Performance Monitoring
+##  Performance Monitoring
 
 The system includes a real-time dashboard accessible at `http://localhost:8080` when running.
 
@@ -135,7 +135,7 @@ Metrics tracked:
 - Trade execution latency
 - System health indicators
 
-## 🚨 Risk Management
+##  Risk Management
 
 Built-in safety features:
 - **Position limits** per market and overall
@@ -144,7 +144,7 @@ Built-in safety features:
 - **Slippage protection** on order execution
 - **Circuit breakers** for unusual market conditions
 
-## 🛠️ Development
+## 🛠 Development
 
 ### Setting up for development
 ```bash
@@ -160,24 +160,13 @@ pre-commit install
 python src/main.py --mode development --debug
 ```
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ⚠️ Disclaimer
+##  Disclaimer
 
 This software is for educational purposes. Trading prediction markets involves risk. Always understand the markets you're trading and never risk more than you can afford to lose.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## 📧 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check the [FAQ](docs/FAQ.md)
-- Review the [API Documentation](docs/API.md)
 
 ---
 
