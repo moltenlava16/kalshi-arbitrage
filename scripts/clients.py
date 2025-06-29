@@ -217,6 +217,43 @@ class KalshiHttpClient(KalshiBaseClient):
         
         return self.get(f'/trade-api/v2/events/{event_ticker}', params=params)
     
+    def get_markets(
+        self,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        event_ticker: Optional[str] = None,
+        series_ticker: Optional[str] = None,
+        max_close_ts: Optional[int] = None,
+        min_close_ts: Optional[int] = None,
+        status: Optional[str] = None,
+        tickers: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves markets based on provided filters.
+        
+        Args:
+            limit: Number of results per page (1-1000, defaults to 100)
+            cursor: Pagination cursor for next page
+            event_ticker: Event ticker to retrieve markets for
+            series_ticker: Series ticker to retrieve contracts for
+            max_close_ts: Markets closing in or before this timestamp
+            min_close_ts: Markets closing in or after this timestamp
+            status: Filter by status (unopened, open, closed, settled)
+            tickers: Comma separated list of specific tickers
+        """
+        params = {
+            'limit': limit,
+            'cursor': cursor,
+            'event_ticker': event_ticker,
+            'series_ticker': series_ticker,
+            'max_close_ts': max_close_ts,
+            'min_close_ts': min_close_ts,
+            'status': status,
+            'tickers': tickers,
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get(self.markets_url, params=params)
+    
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
