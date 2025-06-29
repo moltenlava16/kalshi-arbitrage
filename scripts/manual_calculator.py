@@ -424,7 +424,7 @@ def main():
                 print(f"If {market_b_name} is TRUE: B pays, A doesn't → Profit = ${opportunity.net_profit:.2f}")
                 print(f"If NEITHER is TRUE: Neither pays → Profit = ${opportunity.net_profit:.2f}")
         else:
-            print("\n❌ No arbitrage opportunity found at current prices.")
+            print("\n No arbitrage opportunity found at current prices.")
             print("   (After accounting for fees and minimum profit threshold)")
             
             # Show what would be needed for arbitrage
