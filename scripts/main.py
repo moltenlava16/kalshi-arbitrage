@@ -41,10 +41,6 @@ ws_client = KalshiWebSocketClient(
     environment=env
 )
 
-url = "https://api.elections.kalshi.com/trade-api/v2/events"
-
-headers = {"accept": "application/json"}
-
-response = requests.get(url, headers=headers)
-
-print(response.text)
+# Replace the direct requests call with:
+events = client.get_events(limit=10)
+print("Events:", events)
