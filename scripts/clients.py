@@ -200,6 +200,23 @@ class KalshiHttpClient(KalshiBaseClient):
         params = {k: v for k, v in params.items() if v is not None}
         return self.get('/trade-api/v2/events', params=params)
     
+    def get_event(
+        self,
+        event_ticker: str,
+        with_nested_markets: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves data about a specific event by its ticker.
+        
+        Args:
+            event_ticker: The ticker of the event (required)
+            with_nested_markets: Include nested markets in response
+        """
+        params = {}
+        if with_nested_markets is not None:
+            params['with_nested_markets'] = with_nested_markets
+        
+        return self.get(f'/trade-api/v2/events/{event_ticker}', params=params)
+    
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
