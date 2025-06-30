@@ -295,6 +295,45 @@ class KalshiHttpClient(KalshiBaseClient):
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
         return self.get(self.portfolio_url + '/fills', params=params)
+    
+    def get_orders(
+        self,
+        ticker: Optional[str] = None,
+        event_ticker: Optional[str] = None,
+        min_ts: Optional[int] = None,
+        max_ts: Optional[int] = None,
+        status: Optional[str] = None,
+        cursor: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves all orders for the member.
+        
+        Args:
+            ticker: Restricts response to orders in a single market
+            event_ticker: Restricts response to orders in a single event
+            min_ts: Restricts response to orders after this timestamp (Unix timestamp)
+            max_ts: Restricts response to orders before this timestamp (Unix timestamp)
+            status: Restricts response to orders with certain status (resting, canceled, or executed)
+            cursor: Pagination cursor for next page of results
+            limit: Number of results per page (1-1000, defaults to 100)
+        
+        Returns:
+            Dict containing orders data with pagination info
+        """
+        params = {
+            'ticker': ticker,
+            'event_ticker': event_ticker,
+            'min_ts': min_ts,
+            'max_ts': max_ts,
+            'status': status,
+            'cursor': cursor,
+            'limit': limit,
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get(self.portfolio_url + '/orders', params=params)
+    
+    
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
