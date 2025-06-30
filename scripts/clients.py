@@ -261,6 +261,40 @@ class KalshiHttpClient(KalshiBaseClient):
             order_id: The UUID of the order (required)
         """
         return self.get(f'{self.portfolio_url}/orders/{order_id}')
+    
+    def get_fills(
+        self,
+        ticker: Optional[str] = None,
+        order_id: Optional[str] = None,
+        min_ts: Optional[int] = None,
+        max_ts: Optional[int] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves all fills (executed trades) for the member.
+        
+        Args:
+            ticker: Restricts response to trades in a specific market
+            order_id: Restricts response to trades related to a specific order
+            min_ts: Restricts response to trades after this timestamp
+            max_ts: Restricts response to trades before this timestamp
+            limit: Number of results per page (1-1000, defaults to 100)
+            cursor: Pagination cursor for next page of results
+        
+        Returns:
+            Dict containing fills data with pagination info
+        """
+        params = {
+            'ticker': ticker,
+            'order_id': order_id,
+            'min_ts': min_ts,
+            'max_ts': max_ts,
+            'limit': limit,
+            'cursor': cursor,
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get(self.portfolio_url + '/fills', params=params)
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
