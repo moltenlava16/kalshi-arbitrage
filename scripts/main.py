@@ -41,6 +41,10 @@ ws_client = KalshiWebSocketClient(
     environment=env
 )
 
-# Replace the direct requests call with:
-events = client.get_events(limit=10)
-print("Events:", events)
+# Get all open markets
+markets = client.get_markets(status='open', limit=5)
+print("Markets:", markets)
+
+# Or get markets for a specific event
+mars_markets = client.get_markets(event_ticker='KXCOLONIZEMARS-50')
+print("Mars markets:", mars_markets)
