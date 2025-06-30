@@ -254,6 +254,13 @@ class KalshiHttpClient(KalshiBaseClient):
         params = {k: v for k, v in params.items() if v is not None}
         return self.get(self.markets_url, params=params)
     
+    def get_order(self, order_id: str) -> Dict[str, Any]:
+        """Retrieves a single order by its ID.
+        
+        Args:
+            order_id: The UUID of the order (required)
+        """
+        return self.get(f'{self.portfolio_url}/orders/{order_id}')
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
