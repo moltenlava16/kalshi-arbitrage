@@ -333,7 +333,76 @@ class KalshiHttpClient(KalshiBaseClient):
         params = {k: v for k, v in params.items() if v is not None}
         return self.get(self.portfolio_url + '/orders', params=params)
     
+    def create_order(
+        self,
+        action: str,
+        count: int,
+        side: str,
+        ticker: str,
+        type: str,
+        client_order_id: str,
+        buy_max_cost: Optional[int] = None,
+        expiration_ts: Optional[int] = None,
+        no_price: Optional[int] = None,
+        post_only: Optional[bool] = None,
+        sell_position_floor: Optional[int] = None,
+        time_in_force: Optional[str] = None,
+        yes_price: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Creates a new order in a market.
+        
+        Args:
+            action: "buy" or "sell" - specifies if this is a buy or sell order (required)
+            count: Number of contracts to be bought or sold (required)
+            side: "yes" or "no" - specifies if this is a 'yes' or 'no' order (required)
+            ticker: The ticker of the market the order will be placed in (required)
+            type: "market" or "limit" - specifies order type (required)
+            client_order_id: Client-specified order ID for tracking (required)
+            buy_max_cost: Maximum cents that can be spent to acquire a position (for buy orders)
+            expiration_ts: Expiration time of the order in unix seconds
+            no_price: Submitting price of the No side of the trade, in cents
+            post_only: If true, order will be rejected if it crosses the spread and executes
+            sell_position_floor: Will not let you flip position for a market order if set to 0
+            time_in_force: Currently only "fill_or_kill" is supported
+            yes_price: Submitting price of the Yes side of the trade, in cents
+        
+        Note:
+            - For limit orders: Either yes_price or no_price must be provided (not both)
+            - If buy_max_cost is provided for market orders, it represents the maximum cents
+            that can be spent to acquire a position
+            - If expiration_ts is not provided, order won't expire until explicitly cancelled (GTC)
+        
+        Returns:
+            Dict containing the created order details
+        """
+        body = {
+            'action': action,
+            'count': count,
+            'side': side,
+            'ticker': ticker,
+            'type': type,
+            'client_order_id': client_order_id,
+        }
+        
+        # Add optional parameters if provided
+        if buy_max_cost is not None:
+            body['buy_max_cost'] = buy_max_cost
+        if expiration_ts is not None:
+            body['expiration_ts'] = expiration_ts
+        if no_price is not None:
+            body['no_price'] = no_price
+        if post_only is not None:
+            body['post_only'] = post_only
+        if sell_position_floor is not None:
+            body['sell_position_floor'] = sell_position_floor
+        if time_in_force is not None:
+            body['time_in_force'] = time_in_force
+        if yes_price is not None:
+            body['yes_price'] = yes_price
+        
+        return self.post(self.portfolio_url + '/orders', body)
     
+
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
