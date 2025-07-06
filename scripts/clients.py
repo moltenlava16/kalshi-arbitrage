@@ -493,7 +493,7 @@ class KalshiHttpClient(KalshiBaseClient):
         return self.post(f'{self.portfolio_url}/orders/{order_id}/decrease', body)
     
 
-    
+
     def get_positions(
         self,
         cursor: Optional[str] = None,
@@ -528,6 +528,18 @@ class KalshiHttpClient(KalshiBaseClient):
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
         return self.get(self.portfolio_url + '/positions', params=params)
+    
+
+    def get_order_queue_position(self, order_id: str) -> Dict[str, Any]:
+        """Retrieves an order's queue position in the order book.
+        
+        Args:
+            order_id: The UUID of the order (required)
+        
+        Returns:
+            Dict containing the order's queue position data
+        """
+        return self.get(f'{self.portfolio_url}/orders/{order_id}/queue_position')
     
 
 
