@@ -413,6 +413,55 @@ class KalshiHttpClient(KalshiBaseClient):
         """ 
         return self.delete(f'{self.portfolio_url}/orders/{order_id}')
     
+    def amend_order(
+        self,
+        order_id: str,
+        action: str,
+        client_order_id: str,
+        count: int,
+        side: str,
+        ticker: str,
+        updated_client_order_id: str,
+        no_price: Optional[int] = None,
+        yes_price: Optional[int] = None,
+        ) -> Dict[str, Any]:
+        """Amends an existing order by changing the max number of fillable contracts and/or price.
+        
+        Args:
+            order_id: ID of the order to be amended (required)
+            action: "buy" or "sell" - specifies if this is a buy or sell order (required)
+            client_order_id: Client-specified order ID for tracking (required)
+            count: Number of contracts to be bought or sold (required)
+            side: "yes" or "no" - specifies if this is a 'yes' or 'no' order (required)
+            ticker: The ticker of the market the order will be placed in (required)
+            updated_client_order_id: Updated client-specified order ID (required)
+            no_price: Submitting price of the No side of the trade, in cents
+            yes_price: Submitting price of the Yes side of the trade, in cents
+        
+        Note:
+            - Exactly one of yes_price or no_price must be passed (not both)
+            - Max fillable contracts is remaining_count + fill_count
+        
+        Returns:
+            Dict containing the amended order details
+        """
+        body = {
+            'action': action,
+            'client_order_id': client_order_id,
+            'count': count,
+            'side': side,
+            'ticker': ticker,
+            'updated_client_order_id': updated_client_order_id,
+        }
+        
+        # Add optional parameters if provided
+        if no_price is not None:
+            body['no_price'] = no_price
+        if yes_price is not None:
+            body['yes_price'] = yes_price
+        
+        return self.post(f'{self.portfolio_url}/orders/{order_id}/amend', body)
+    
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
