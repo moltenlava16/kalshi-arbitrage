@@ -462,6 +462,36 @@ class KalshiHttpClient(KalshiBaseClient):
         
         return self.post(f'{self.portfolio_url}/orders/{order_id}/amend', body)
     
+    def decrease_order(
+        self,
+        order_id: str,
+        reduce_by: Optional[int] = None,
+        reduce_to: Optional[int] = None,
+        ) -> Dict[str, Any]:
+        """Decreases the number of contracts in an existing order.
+        
+        Args:
+            order_id: ID of the order to be decreased (required)
+            reduce_by: Number of contracts to decrease the order's count by
+            reduce_to: Number of contracts to decrease the order to
+        
+        Note:
+            - One of reduce_by or reduce_to must be provided (not both)
+            - If the order's remaining count is lower, it does nothing
+            - Cancelling an order is equivalent to decreasing an order amount to zero
+        
+        Returns:
+            Dict containing the decreased order details
+        """
+        body = {}
+        
+        if reduce_by is not None:
+            body['reduce_by'] = reduce_by
+        if reduce_to is not None:
+            body['reduce_to'] = reduce_to
+        
+        return self.post(f'{self.portfolio_url}/orders/{order_id}/decrease', body)
+    
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
