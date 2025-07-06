@@ -402,6 +402,17 @@ class KalshiHttpClient(KalshiBaseClient):
         
         return self.post(self.portfolio_url + '/orders', body)
     
+    def cancel_order(self, order_id: str) -> Dict[str, Any]:
+        """Cancels an order by its ID.
+        
+        Args:
+            order_id: The UUID of the order to cancel (required)
+        
+        Returns:
+            Dict containing the cancelled order details
+        """ 
+        return self.delete(f'{self.portfolio_url}/orders/{order_id}')
+    
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
