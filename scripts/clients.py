@@ -493,6 +493,43 @@ class KalshiHttpClient(KalshiBaseClient):
         return self.post(f'{self.portfolio_url}/orders/{order_id}/decrease', body)
     
 
+    
+    def get_positions(
+        self,
+        cursor: Optional[str] = None,
+        limit: Optional[int] = None,
+        count_filter: Optional[str] = None,
+        settlement_status: Optional[str] = None,
+        ticker: Optional[str] = None,
+        event_ticker: Optional[str] = None,
+        ) -> Dict[str, Any]:
+        """Retrieves all market positions for the member.
+        
+        Args:
+            cursor: Pagination cursor for next page of results
+            limit: Number of results per page (1-1000, defaults to 100)
+            count_filter: Restricts positions to those with any of following fields with non-zero values, 
+                            as a comma separated list. Accepted values: position, total_traded, resting_order_count
+            settlement_status: Settlement status of the markets to return (all, settled, unsettled)
+            ticker: Ticker of desired positions
+            event_ticker: Event ticker of desired positions
+        
+        Returns:
+            Dict containing positions data with pagination info
+        """
+        params = {
+            'cursor': cursor,
+            'limit': limit,
+            'count_filter': count_filter,
+            'settlement_status': settlement_status,
+            'ticker': ticker,
+            'event_ticker': event_ticker,
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get(self.portfolio_url + '/positions', params=params)
+    
+
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
