@@ -14,12 +14,15 @@ from cryptography.exceptions import InvalidSignature
 
 import websockets
 
+
 class Environment(Enum):
     DEMO = "demo"
     PROD = "prod"
 
+
 class KalshiBaseClient:
     """Base client class for interacting with the Kalshi API."""
+
     def __init__(
         self,
         key_id: str,
@@ -53,7 +56,7 @@ class KalshiBaseClient:
         timestamp_str = str(current_time_milliseconds)
 
         # Remove query params from path
-        path_parts = path.split('?')
+        path_parts = path.split("?")
 
         msg_string = timestamp_str + method + path_parts[0]
         signature = self.sign_pss_text(msg_string)
@@ -68,22 +71,24 @@ class KalshiBaseClient:
 
     def sign_pss_text(self, text: str) -> str:
         """Signs the text using RSA-PSS and returns the base64 encoded signature."""
-        message = text.encode('utf-8')
+        message = text.encode("utf-8")
         try:
             signature = self.private_key.sign(
                 message,
                 padding.PSS(
                     mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.DIGEST_LENGTH
+                    salt_length=padding.PSS.DIGEST_LENGTH,
                 ),
-                hashes.SHA256()
+                hashes.SHA256(),
             )
-            return base64.b64encode(signature).decode('utf-8')
+            return base64.b64encode(signature).decode("utf-8")
         except InvalidSignature as e:
             raise ValueError("RSA sign PSS failed") from e
 
+
 class KalshiHttpClient(KalshiBaseClient):
     """Client for handling HTTP connections to the Kalshi API."""
+
     def __init__(
         self,
         key_id: str,
@@ -115,9 +120,7 @@ class KalshiHttpClient(KalshiBaseClient):
         """Performs an authenticated POST request to the Kalshi API."""
         self.rate_limit()
         response = requests.post(
-            self.host + path,
-            json=body,
-            headers=self.request_headers("POST", path)
+            self.host + path, json=body, headers=self.request_headers("POST", path)
         )
         self.raise_if_bad_response(response)
         return response.json()
@@ -126,9 +129,7 @@ class KalshiHttpClient(KalshiBaseClient):
         """Performs an authenticated GET request to the Kalshi API."""
         self.rate_limit()
         response = requests.get(
-            self.host + path,
-            headers=self.request_headers("GET", path),
-            params=params
+            self.host + path, headers=self.request_headers("GET", path), params=params
         )
         self.raise_if_bad_response(response)
         return response.json()
@@ -139,14 +140,14 @@ class KalshiHttpClient(KalshiBaseClient):
         response = requests.delete(
             self.host + path,
             headers=self.request_headers("DELETE", path),
-            params=params
+            params=params,
         )
         self.raise_if_bad_response(response)
         return response.json()
 
     def get_balance(self) -> Dict[str, Any]:
         """Retrieves the account balance."""
-        return self.get(self.portfolio_url + '/balance')
+        return self.get(self.portfolio_url + "/balance")
 
     def get_exchange_status(self) -> Dict[str, Any]:
         """Retrieves the exchange status."""
@@ -162,16 +163,16 @@ class KalshiHttpClient(KalshiBaseClient):
     ) -> Dict[str, Any]:
         """Retrieves trades based on provided filters."""
         params = {
-            'ticker': ticker,
-            'limit': limit,
-            'cursor': cursor,
-            'max_ts': max_ts,
-            'min_ts': min_ts,
+            "ticker": ticker,
+            "limit": limit,
+            "cursor": cursor,
+            "max_ts": max_ts,
+            "min_ts": min_ts,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
-        return self.get(self.markets_url + '/trades', params=params)
-    
+        return self.get(self.markets_url + "/trades", params=params)
+
     def get_events(
         self,
         limit: Optional[int] = None,
@@ -181,7 +182,7 @@ class KalshiHttpClient(KalshiBaseClient):
         with_nested_markets: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """Retrieves events based on provided filters.
-        
+
         Args:
             limit: Number of results per page (1-200, defaults to 100)
             cursor: Pagination cursor for next page
@@ -190,33 +191,33 @@ class KalshiHttpClient(KalshiBaseClient):
             with_nested_markets: Include nested markets in response
         """
         params = {
-            'limit': limit,
-            'cursor': cursor,
-            'status': status,
-            'series_ticker': series_ticker,
-            'with_nested_markets': with_nested_markets,
+            "limit": limit,
+            "cursor": cursor,
+            "status": status,
+            "series_ticker": series_ticker,
+            "with_nested_markets": with_nested_markets,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
-        return self.get('/trade-api/v2/events', params=params)
-    
+        return self.get("/trade-api/v2/events", params=params)
+
     def get_event(
         self,
         event_ticker: str,
         with_nested_markets: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """Retrieves data about a specific event by its ticker.
-        
+
         Args:
             event_ticker: The ticker of the event (required)
             with_nested_markets: Include nested markets in response
         """
         params = {}
         if with_nested_markets is not None:
-            params['with_nested_markets'] = with_nested_markets
-        
-        return self.get(f'/trade-api/v2/events/{event_ticker}', params=params)
-    
+            params["with_nested_markets"] = with_nested_markets
+
+        return self.get(f"/trade-api/v2/events/{event_ticker}", params=params)
+
     def get_markets(
         self,
         limit: Optional[int] = None,
@@ -229,7 +230,7 @@ class KalshiHttpClient(KalshiBaseClient):
         tickers: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Retrieves markets based on provided filters.
-        
+
         Args:
             limit: Number of results per page (1-1000, defaults to 100)
             cursor: Pagination cursor for next page
@@ -241,27 +242,27 @@ class KalshiHttpClient(KalshiBaseClient):
             tickers: Comma separated list of specific tickers
         """
         params = {
-            'limit': limit,
-            'cursor': cursor,
-            'event_ticker': event_ticker,
-            'series_ticker': series_ticker,
-            'max_close_ts': max_close_ts,
-            'min_close_ts': min_close_ts,
-            'status': status,
-            'tickers': tickers,
+            "limit": limit,
+            "cursor": cursor,
+            "event_ticker": event_ticker,
+            "series_ticker": series_ticker,
+            "max_close_ts": max_close_ts,
+            "min_close_ts": min_close_ts,
+            "status": status,
+            "tickers": tickers,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
         return self.get(self.markets_url, params=params)
-    
+
     def get_order(self, order_id: str) -> Dict[str, Any]:
         """Retrieves a single order by its ID.
-        
+
         Args:
             order_id: The UUID of the order (required)
         """
-        return self.get(f'{self.portfolio_url}/orders/{order_id}')
-    
+        return self.get(f"{self.portfolio_url}/orders/{order_id}")
+
     def get_fills(
         self,
         ticker: Optional[str] = None,
@@ -272,7 +273,7 @@ class KalshiHttpClient(KalshiBaseClient):
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Retrieves all fills (executed trades) for the member.
-        
+
         Args:
             ticker: Restricts response to trades in a specific market
             order_id: Restricts response to trades related to a specific order
@@ -280,22 +281,22 @@ class KalshiHttpClient(KalshiBaseClient):
             max_ts: Restricts response to trades before this timestamp
             limit: Number of results per page (1-1000, defaults to 100)
             cursor: Pagination cursor for next page of results
-        
+
         Returns:
             Dict containing fills data with pagination info
         """
         params = {
-            'ticker': ticker,
-            'order_id': order_id,
-            'min_ts': min_ts,
-            'max_ts': max_ts,
-            'limit': limit,
-            'cursor': cursor,
+            "ticker": ticker,
+            "order_id": order_id,
+            "min_ts": min_ts,
+            "max_ts": max_ts,
+            "limit": limit,
+            "cursor": cursor,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
-        return self.get(self.portfolio_url + '/fills', params=params)
-    
+        return self.get(self.portfolio_url + "/fills", params=params)
+
     def get_orders(
         self,
         ticker: Optional[str] = None,
@@ -307,7 +308,7 @@ class KalshiHttpClient(KalshiBaseClient):
         limit: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Retrieves all orders for the member.
-        
+
         Args:
             ticker: Restricts response to orders in a single market
             event_ticker: Restricts response to orders in a single event
@@ -316,23 +317,23 @@ class KalshiHttpClient(KalshiBaseClient):
             status: Restricts response to orders with certain status (resting, canceled, or executed)
             cursor: Pagination cursor for next page of results
             limit: Number of results per page (1-1000, defaults to 100)
-        
+
         Returns:
             Dict containing orders data with pagination info
         """
         params = {
-            'ticker': ticker,
-            'event_ticker': event_ticker,
-            'min_ts': min_ts,
-            'max_ts': max_ts,
-            'status': status,
-            'cursor': cursor,
-            'limit': limit,
+            "ticker": ticker,
+            "event_ticker": event_ticker,
+            "min_ts": min_ts,
+            "max_ts": max_ts,
+            "status": status,
+            "cursor": cursor,
+            "limit": limit,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
-        return self.get(self.portfolio_url + '/orders', params=params)
-    
+        return self.get(self.portfolio_url + "/orders", params=params)
+
     def create_order(
         self,
         action: str,
@@ -350,7 +351,7 @@ class KalshiHttpClient(KalshiBaseClient):
         yes_price: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Creates a new order in a market.
-        
+
         Args:
             action: "buy" or "sell" - specifies if this is a buy or sell order (required)
             count: Number of contracts to be bought or sold (required)
@@ -365,54 +366,54 @@ class KalshiHttpClient(KalshiBaseClient):
             sell_position_floor: Will not let you flip position for a market order if set to 0
             time_in_force: Currently only "fill_or_kill" is supported
             yes_price: Submitting price of the Yes side of the trade, in cents
-        
+
         Note:
             - For limit orders: Either yes_price or no_price must be provided (not both)
             - If buy_max_cost is provided for market orders, it represents the maximum cents
             that can be spent to acquire a position
             - If expiration_ts is not provided, order won't expire until explicitly cancelled (GTC)
-        
+
         Returns:
             Dict containing the created order details
         """
         body = {
-            'action': action,
-            'count': count,
-            'side': side,
-            'ticker': ticker,
-            'type': type,
-            'client_order_id': client_order_id,
+            "action": action,
+            "count": count,
+            "side": side,
+            "ticker": ticker,
+            "type": type,
+            "client_order_id": client_order_id,
         }
-        
+
         # Add optional parameters if provided
         if buy_max_cost is not None:
-            body['buy_max_cost'] = buy_max_cost
+            body["buy_max_cost"] = buy_max_cost
         if expiration_ts is not None:
-            body['expiration_ts'] = expiration_ts
+            body["expiration_ts"] = expiration_ts
         if no_price is not None:
-            body['no_price'] = no_price
+            body["no_price"] = no_price
         if post_only is not None:
-            body['post_only'] = post_only
+            body["post_only"] = post_only
         if sell_position_floor is not None:
-            body['sell_position_floor'] = sell_position_floor
+            body["sell_position_floor"] = sell_position_floor
         if time_in_force is not None:
-            body['time_in_force'] = time_in_force
+            body["time_in_force"] = time_in_force
         if yes_price is not None:
-            body['yes_price'] = yes_price
-        
-        return self.post(self.portfolio_url + '/orders', body)
-    
+            body["yes_price"] = yes_price
+
+        return self.post(self.portfolio_url + "/orders", body)
+
     def cancel_order(self, order_id: str) -> Dict[str, Any]:
         """Cancels an order by its ID.
-        
+
         Args:
             order_id: The UUID of the order to cancel (required)
-        
+
         Returns:
             Dict containing the cancelled order details
-        """ 
-        return self.delete(f'{self.portfolio_url}/orders/{order_id}')
-    
+        """
+        return self.delete(f"{self.portfolio_url}/orders/{order_id}")
+
     def amend_order(
         self,
         order_id: str,
@@ -424,9 +425,9 @@ class KalshiHttpClient(KalshiBaseClient):
         updated_client_order_id: str,
         no_price: Optional[int] = None,
         yes_price: Optional[int] = None,
-        ) -> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Amends an existing order by changing the max number of fillable contracts and/or price.
-        
+
         Args:
             order_id: ID of the order to be amended (required)
             action: "buy" or "sell" - specifies if this is a buy or sell order (required)
@@ -437,62 +438,60 @@ class KalshiHttpClient(KalshiBaseClient):
             updated_client_order_id: Updated client-specified order ID (required)
             no_price: Submitting price of the No side of the trade, in cents
             yes_price: Submitting price of the Yes side of the trade, in cents
-        
+
         Note:
             - Exactly one of yes_price or no_price must be passed (not both)
             - Max fillable contracts is remaining_count + fill_count
-        
+
         Returns:
             Dict containing the amended order details
         """
         body = {
-            'action': action,
-            'client_order_id': client_order_id,
-            'count': count,
-            'side': side,
-            'ticker': ticker,
-            'updated_client_order_id': updated_client_order_id,
+            "action": action,
+            "client_order_id": client_order_id,
+            "count": count,
+            "side": side,
+            "ticker": ticker,
+            "updated_client_order_id": updated_client_order_id,
         }
-        
+
         # Add optional parameters if provided
         if no_price is not None:
-            body['no_price'] = no_price
+            body["no_price"] = no_price
         if yes_price is not None:
-            body['yes_price'] = yes_price
-        
-        return self.post(f'{self.portfolio_url}/orders/{order_id}/amend', body)
-    
+            body["yes_price"] = yes_price
+
+        return self.post(f"{self.portfolio_url}/orders/{order_id}/amend", body)
+
     def decrease_order(
         self,
         order_id: str,
         reduce_by: Optional[int] = None,
         reduce_to: Optional[int] = None,
-        ) -> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Decreases the number of contracts in an existing order.
-        
+
         Args:
             order_id: ID of the order to be decreased (required)
             reduce_by: Number of contracts to decrease the order's count by
             reduce_to: Number of contracts to decrease the order to
-        
+
         Note:
             - One of reduce_by or reduce_to must be provided (not both)
             - If the order's remaining count is lower, it does nothing
             - Cancelling an order is equivalent to decreasing an order amount to zero
-        
+
         Returns:
             Dict containing the decreased order details
         """
         body = {}
-        
-        if reduce_by is not None:
-            body['reduce_by'] = reduce_by
-        if reduce_to is not None:
-            body['reduce_to'] = reduce_to
-        
-        return self.post(f'{self.portfolio_url}/orders/{order_id}/decrease', body)
-    
 
+        if reduce_by is not None:
+            body["reduce_by"] = reduce_by
+        if reduce_to is not None:
+            body["reduce_to"] = reduce_to
+
+        return self.post(f"{self.portfolio_url}/orders/{order_id}/decrease", body)
 
     def get_positions(
         self,
@@ -502,49 +501,48 @@ class KalshiHttpClient(KalshiBaseClient):
         settlement_status: Optional[str] = None,
         ticker: Optional[str] = None,
         event_ticker: Optional[str] = None,
-        ) -> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Retrieves all market positions for the member.
-        
+
         Args:
             cursor: Pagination cursor for next page of results
             limit: Number of results per page (1-1000, defaults to 100)
-            count_filter: Restricts positions to those with any of following fields with non-zero values, 
+            count_filter: Restricts positions to those with any of following fields with non-zero values,
                             as a comma separated list. Accepted values: position, total_traded, resting_order_count
             settlement_status: Settlement status of the markets to return (all, settled, unsettled)
             ticker: Ticker of desired positions
             event_ticker: Event ticker of desired positions
-        
+
         Returns:
             Dict containing positions data with pagination info
         """
         params = {
-            'cursor': cursor,
-            'limit': limit,
-            'count_filter': count_filter,
-            'settlement_status': settlement_status,
-            'ticker': ticker,
-            'event_ticker': event_ticker,
+            "cursor": cursor,
+            "limit": limit,
+            "count_filter": count_filter,
+            "settlement_status": settlement_status,
+            "ticker": ticker,
+            "event_ticker": event_ticker,
         }
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
-        return self.get(self.portfolio_url + '/positions', params=params)
-    
+        return self.get(self.portfolio_url + "/positions", params=params)
 
     def get_order_queue_position(self, order_id: str) -> Dict[str, Any]:
         """Retrieves an order's queue position in the order book.
-        
+
         Args:
             order_id: The UUID of the order (required)
-        
+
         Returns:
             Dict containing the order's queue position data
         """
-        return self.get(f'{self.portfolio_url}/orders/{order_id}/queue_position')
-    
+        return self.get(f"{self.portfolio_url}/orders/{order_id}/queue_position")
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
     """Client for handling WebSocket connections to the Kalshi API."""
+
     def __init__(
         self,
         key_id: str,
@@ -560,7 +558,9 @@ class KalshiWebSocketClient(KalshiBaseClient):
         """Establishes a WebSocket connection using authentication."""
         host = self.WS_BASE_URL + self.url_suffix
         auth_headers = self.request_headers("GET", self.url_suffix)
-        async with websockets.connect(host, additional_headers=auth_headers) as websocket:
+        async with websockets.connect(
+            host, additional_headers=auth_headers
+        ) as websocket:
             self.ws = websocket
             await self.on_open()
             await self.handler()
@@ -575,9 +575,7 @@ class KalshiWebSocketClient(KalshiBaseClient):
         subscription_message = {
             "id": self.message_id,
             "cmd": "subscribe",
-            "params": {
-                "channels": ["ticker"]
-            }
+            "params": {"channels": ["ticker"]},
         }
         await self.ws.send(json.dumps(subscription_message))
         self.message_id += 1
@@ -602,4 +600,9 @@ class KalshiWebSocketClient(KalshiBaseClient):
 
     async def on_close(self, close_status_code, close_msg):
         """Callback when WebSocket connection is closed."""
-        print("WebSocket connection closed with code:", close_status_code, "and message:", close_msg)
+        print(
+            "WebSocket connection closed with code:",
+            close_status_code,
+            "and message:",
+            close_msg,
+        )
