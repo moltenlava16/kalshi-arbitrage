@@ -662,6 +662,12 @@ class KalshiHttpClient(KalshiBaseClient):
         
     def delete_quote(self, quote_id: str) -> Dict[str, Any]:
         return self.delete(f"/trade-api/v2/communications/quotes/{quote_id}")
+    
+
+    def accept_quote(self, quote_id: str, accepted_side: str) -> Dict[str, Any]:
+        body = {"accepted_side": accepted_side}
+        return self.post(f"/trade-api/v2/communications/quotes/{quote_id}/accept", body)
+
 
 
 
