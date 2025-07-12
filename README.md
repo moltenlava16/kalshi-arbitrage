@@ -16,36 +16,6 @@ This system exploits logical inconsistencies in related market options on Kalshi
 
 ##  Quick Start
 
-### Prerequisites
-- Python 3.8 or higher
-- Kalshi account with API access
-- Git for version control
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/kalshi-arbitrage.git
-cd kalshi-arbitrage
-```
-
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Configure your API credentials:
-```bash
-cp config/credentials.example.py config/credentials.py
-# Edit config/credentials.py with your Kalshi API credentials
-```
-
 ### Basic Usage
 
 1. **Manual Arbitrage Calculator** (for testing):
