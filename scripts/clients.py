@@ -703,8 +703,9 @@ class KalshiHttpClient(KalshiBaseClient):
             "rest_remainder": rest_remainder,
         }
         return self.post("/trade-api/v2/communications/rfqs", body)
-
-
+    
+    def get_rfq(self, rfq_id: str) -> Dict[str, Any]:
+        return self.get(f"/trade-api/v2/communications/rfqs/{rfq_id}")
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
