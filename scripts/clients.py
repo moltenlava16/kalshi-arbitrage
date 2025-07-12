@@ -668,6 +668,9 @@ class KalshiHttpClient(KalshiBaseClient):
         body = {"accepted_side": accepted_side}
         return self.post(f"/trade-api/v2/communications/quotes/{quote_id}/accept", body)
 
+    def confirm_quote(self, quote_id: str) -> Dict[str, Any]:
+        return self.post(f"/trade-api/v2/communications/quotes/{quote_id}/confirm", {})
+
 
 
 
