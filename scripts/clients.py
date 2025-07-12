@@ -690,6 +690,19 @@ class KalshiHttpClient(KalshiBaseClient):
         }
         params = {k: v for k, v in params.items() if v is not None}
         return self.get("/trade-api/v2/communications/rfqs", params=params)
+    
+    def create_rfq(
+        self,
+        market_ticker: str,
+        contracts: int,
+        rest_remainder: bool,
+        ) -> Dict[str, Any]:
+        body = {
+            "market_ticker": market_ticker,
+            "contracts": contracts,
+            "rest_remainder": rest_remainder,
+        }
+        return self.post("/trade-api/v2/communications/rfqs", body)
 
 
 
