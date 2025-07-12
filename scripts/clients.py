@@ -670,6 +670,26 @@ class KalshiHttpClient(KalshiBaseClient):
 
     def confirm_quote(self, quote_id: str) -> Dict[str, Any]:
         return self.post(f"/trade-api/v2/communications/quotes/{quote_id}/confirm", {})
+    
+    def get_rfqs(
+        self,
+        cursor: Optional[str] = None,
+        limit: Optional[int] = None,
+        market_ticker: Optional[str] = None,
+        event_ticker: Optional[str] = None,
+        status: Optional[str] = None,
+        creator_user_id: Optional[str] = None,
+        ) -> Dict[str, Any]:
+        params = {
+            "cursor": cursor,
+            "limit": limit,
+            "market_ticker": market_ticker,
+            "event_ticker": event_ticker,
+            "status": status,
+            "creator_user_id": creator_user_id,
+        }
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get("/trade-api/v2/communications/rfqs", params=params)
 
 
 
