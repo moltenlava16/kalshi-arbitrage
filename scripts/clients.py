@@ -659,6 +659,10 @@ class KalshiHttpClient(KalshiBaseClient):
             Dict containing the quote details
         """
         return self.get(f"/trade-api/v2/communications/quotes/{quote_id}")
+        
+    def delete_quote(self, quote_id: str) -> Dict[str, Any]:
+        return self.delete(f"/trade-api/v2/communications/quotes/{quote_id}")
+
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
