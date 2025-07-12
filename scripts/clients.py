@@ -706,6 +706,11 @@ class KalshiHttpClient(KalshiBaseClient):
     
     def get_rfq(self, rfq_id: str) -> Dict[str, Any]:
         return self.get(f"/trade-api/v2/communications/rfqs/{rfq_id}")
+    
+
+    def delete_rfq(self, rfq_id: str) -> Dict[str, Any]:
+        return self.delete(f"/trade-api/v2/communications/rfqs/{rfq_id}")
+
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
