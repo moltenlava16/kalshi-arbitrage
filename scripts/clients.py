@@ -648,6 +648,17 @@ class KalshiHttpClient(KalshiBaseClient):
             body["rest_remainder"] = rest_remainder
         
         return self.post("/trade-api/v2/communications/quotes", body)
+    
+    def get_quote(self, quote_id: str) -> Dict[str, Any]:
+        """Retrieves a particular quote by its ID.
+
+        Args:
+            quote_id: The ID of the quote to get (required)
+
+        Returns:
+            Dict containing the quote details
+        """
+        return self.get(f"/trade-api/v2/communications/quotes/{quote_id}")
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
