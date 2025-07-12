@@ -619,6 +619,35 @@ class KalshiHttpClient(KalshiBaseClient):
         # Remove None values
         params = {k: v for k, v in params.items() if v is not None}
         return self.get("/trade-api/v2/communications/quotes", params=params)
+    
+    def create_quote(
+        self,
+        rfq_id: str,
+        yes_bid: Optional[int] = None,
+        no_bid: Optional[int] = None,
+        rest_remainder: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """Creates a quote in response to an RFQ.
+
+        Args:
+            rfq_id: The RFQ ID to respond to (required)
+            yes_bid: Bid price for yes side in cents
+            no_bid: Bid price for no side in cents
+            rest_remainder: Whether to rest remainder as boolean
+
+        Returns:
+            Dict containing the created quote details
+        """
+        body = {"rfq_id": rfq_id}
+        
+        if yes_bid is not None:
+            body["yes_bid"] = yes_bid
+        if no_bid is not None:
+            body["no_bid"] = no_bid
+        if rest_remainder is not None:
+            body["rest_remainder"] = rest_remainder
+        
+        return self.post("/trade-api/v2/communications/quotes", body)
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
