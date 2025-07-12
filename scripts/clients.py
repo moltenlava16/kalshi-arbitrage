@@ -559,6 +559,26 @@ class KalshiHttpClient(KalshiBaseClient):
             Dict containing the order's queue position data
         """
         return self.get(f"{self.portfolio_url}/orders/{order_id}/queue_position")
+    
+    def get_market_orderbook(
+        self,
+        ticker: str,
+        depth: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves the order book for a specific market.
+
+        Args:
+            ticker: Market ticker (required)
+            depth: Maximum number of orderbook price levels for either side
+
+        Returns:
+            Dict containing the market orderbook data
+        """
+        params = {}
+        if depth is not None:
+            params["depth"] = depth
+
+        return self.get(f"{self.markets_url}/{ticker}/orderbook", params=params)
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
