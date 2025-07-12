@@ -1,7 +1,7 @@
 import requests
 import base64
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from enum import Enum
 import json
@@ -503,6 +503,16 @@ class KalshiHttpClient(KalshiBaseClient):
         }
         
         return self.post(self.portfolio_url + "/orders/batched", body)
+    
+    def cancel_batch_orders(
+        self,
+        ids: List[str]
+    ) -> Dict[str, Any]:
+        body = {
+            "ids": ids
+        }
+        
+        return self.delete(self.portfolio_url + "/orders/batched", body)
 
     def get_positions(
         self,
