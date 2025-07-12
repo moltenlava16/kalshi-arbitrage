@@ -492,6 +492,17 @@ class KalshiHttpClient(KalshiBaseClient):
             body["reduce_to"] = reduce_to
 
         return self.post(f"{self.portfolio_url}/orders/{order_id}/decrease", body)
+    
+    def create_batch_orders(
+        self,
+        orders: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        
+        body = {
+            "orders": orders
+        }
+        
+        return self.post(self.portfolio_url + "/orders/batched", body)
 
     def get_positions(
         self,

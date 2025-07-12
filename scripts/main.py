@@ -44,42 +44,29 @@ ws_client = KalshiWebSocketClient(
 )
 
 
-
-trades = client.get_trades()
-print(trades)
-
-
-# # Choose one of the Bitcoin markets from your list
-# ticker = "KXBTCD-25JUL0709-T108499.99"
-
-# # Generate unique client order IDs
-# yes_client_order_id = str(uuid.uuid4())
-# no_client_order_id = str(uuid.uuid4())
-
-# try:
-#    # Place market sell order for Yes contracts
-#    yes_order = client.create_order(
-#        action="sell",
-#        count=1,  # Number of contracts
-#        side="yes",
-#        ticker=ticker,
-#        type="market",
-#        client_order_id=yes_client_order_id,
-#        yes_price=50  # 50 cents
-#    )
-#    print(f"Yes sell order placed: {yes_order.get('order', {}).get('order_id')}")
-   
-#    # Place market sell order for No contracts
-#    no_order = client.create_order(
-#        action="sell",
-#        count=1,  # Number of contracts
-#        side="no",
-#        ticker=ticker,
-#        type="market",
-#        client_order_id=no_client_order_id,
-#        no_price=50  # 50 cents
-#    )
-#    print(f"No sell order placed: {no_order.get('order', {}).get('order_id')}")
-   
-# except Exception as e:
-#    print(f"Error placing orders: {str(e)}")
+# Instead of hardcoding the ticker, find a valid one:
+try:
+    # Get open markets
+    markets_response = client.get_markets(status="open", limit=1)
+    markets = markets_response.get('markets', [])
+    
+    if markets:
+        ticker = markets[0].get('ticker')
+        print(f"Using ticker: {ticker}")
+        
+        # Then place your order with the valid ticker
+        buy_order = client.create_order(
+            action="buy",
+            count=1,
+            side="yes",
+            ticker=ticker,
+            type="market",
+            client_order_id=str(uuid.uuid4()),
+            buy_max_cost=50  # Add this to prevent overspending
+        )
+        print(f"Order placed: {buy_order}")
+    else:
+        print("No open markets found")
+        
+except Exception as e:
+    print(f"Error: {str(e)}")
