@@ -579,6 +579,46 @@ class KalshiHttpClient(KalshiBaseClient):
             params["depth"] = depth
 
         return self.get(f"{self.markets_url}/{ticker}/orderbook", params=params)
+    
+    def get_quotes(
+        self,
+        cursor: Optional[str] = None,
+        limit: Optional[int] = None,
+        market_ticker: Optional[str] = None,
+        event_ticker: Optional[str] = None,
+        status: Optional[str] = None,
+        quote_creator_user_id: Optional[str] = None,
+        rfq_creator_user_id: Optional[str] = None,
+        rfq_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Retrieves quotes based on provided filters.
+
+        Args:
+            cursor: Pagination cursor for next page
+            limit: Number of results per page
+            market_ticker: Filter by market ticker
+            event_ticker: Filter by event ticker
+            status: Filter by status
+            quote_creator_user_id: Filter by quote creator user ID
+            rfq_creator_user_id: Filter by RFQ creator user ID
+            rfq_id: Filter by RFQ ID
+
+        Returns:
+            Dict containing quotes data
+        """
+        params = {
+            "cursor": cursor,
+            "limit": limit,
+            "market_ticker": market_ticker,
+            "event_ticker": event_ticker,
+            "status": status,
+            "quote_creator_user_id": quote_creator_user_id,
+            "rfq_creator_user_id": rfq_creator_user_id,
+            "rfq_id": rfq_id,
+        }
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        return self.get("/trade-api/v2/communications/quotes", params=params)
 
 
 class KalshiWebSocketClient(KalshiBaseClient):
